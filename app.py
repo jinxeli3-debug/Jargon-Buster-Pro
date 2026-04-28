@@ -58,7 +58,7 @@ with st.sidebar:
                 
     st.write("---")
     st.link_button("📧 Contact Support", "mailto:your.email@deped.gov.ph", use_container_width=True)
-    st.caption("© 2026 Eleazer A. Meriño | Jargon Buster Pro")
+    st.caption("Copyright © 2026 | Jargon Buster Pro")
 
 # --- 4. MAIN UI & SETTINGS ---
 st.title("Jargon Buster Pro 🚀")
