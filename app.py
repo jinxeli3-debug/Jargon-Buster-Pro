@@ -3,7 +3,7 @@ import google.generativeai as genai
 from docx import Document
 from fpdf import FPDF
 import io
-import time # Added to prevent Bulk Run from crashing the Free Tier
+import time
 
 # --- 1. CORE FUNCTIONS & CACHING ---
 def convert_to_docx(text):
@@ -22,12 +22,11 @@ def convert_to_pdf(text):
     pdf.multi_cell(0, 8, txt=clean_text)
     return bytes(pdf.output())
 
-# FEATURE 1: Smart Caching (Saves API Quota!)
-# The underscore in _api_key tells Streamlit to only memorize the prompt, keeping your key secure.
 @st.cache_data(show_spinner=False)
 def fetch_ai_response(prompt_text, _api_key):
     genai.configure(api_key=_api_key)
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    # Note: Upgrading to 1.5-flash to handle the more complex COT prompts efficiently
+    model = genai.GenerativeModel('gemini-1.5-flash')
     response = model.generate_content(prompt_text)
     return response.text
 
@@ -44,8 +43,8 @@ with st.sidebar:
     
     st.write("---")
     st.markdown("### 👨‍🏫 Developer")
-    st.write("**Name:** Eleazer A. Meriño")
-    st.write("DepEd Proficient Teacher | Lone Developer")
+    st.write("**Name:** [Your Name]")
+    st.write("DepEd Proficient Teacher | Binalonan")
     
     st.write("---")
     st.markdown("### 🗂️ Cache & History")
@@ -55,16 +54,11 @@ with st.sidebar:
         for i, item in enumerate(reversed(st.session_state.history)):
             with st.expander(f"Run {len(st.session_state.history) - i}: {item['task']}"):
                 st.write(item['result'][:150] + "...")
-                
-    st.write("---")
-    st.link_button("📧 Contact Support", "mailto:your.email@deped.gov.ph", use_container_width=True)
-    st.caption("Copyright © 2026 | Jargon Buster Pro")
 
-# --- 4. MAIN UI & SETTINGS ---
+# --- 4. MAIN UI & BASIC SETTINGS ---
 st.title("Jargon Buster Pro 🚀")
-st.caption("God-Tier Edition: Smart Cache | 5E Rubrics | Bulk Processing")
+st.caption("Master Teacher Edition: Smart Cache | 5E Rubrics | Bulk Run | COT Integration")
 
-# Global Settings for both tabs
 c1, c2, c3 = st.columns(3)
 with c1:
     task_type = st.selectbox("Task?", ["General Simplify", "Unpack to 5E Lesson Plan"])
@@ -73,30 +67,61 @@ with c2:
 with c3:
     target_lang = st.selectbox("Language?", ["English", "Tagalog", "Ilokano", "Pangasinan"])
 
-# FEATURE 2: The Automated Rubric Generator
-needs_rubric = st.checkbox("📊 Include 4-Point Grading Rubric (For 5E Evaluation Phase)")
+# --- 5. MASTER TEACHER UPGRADES ---
+st.write("---")
+st.markdown("### 🌟 Master Teacher Upgrades")
+col_mt1, col_mt2 = st.columns(2)
 
-# --- 5. TABS LOGIC (Single vs Bulk) ---
+with col_mt1:
+    needs_rubric = st.checkbox("📊 Include 4-Point Grading Rubric")
+    needs_quiz = st.checkbox("📝 Generate 5-Item Quiz & Answer Key")
+    local_context = st.text_input("🌴 Local Context (e.g., Binalonan Mango Farming, Tupig)")
+
+with col_mt2:
+    cot_indicators = st.multiselect("🎯 Select COT Indicators to Target", [
+        "Indicator 1: Content knowledge and pedagogy",
+        "Indicator 2: Literacy and numeracy skills",
+        "Indicator 3: Critical and creative thinking (HOTS)",
+        "Indicator 4: Meaningful exploration and hands-on activities",
+        "Indicator 5: Constructive and positive discipline",
+        "Indicator 6: Differentiated instruction for varied learners",
+        "Indicator 7: Developmentally sequenced teaching",
+        "Indicator 8: ICT integration",
+        "Indicator 9: Formative and summative assessment"
+    ])
+
+# --- 6. PROMPT BUILDER HELPER ---
+def build_advanced_prompt(base_melc):
+    prompt = f"Target: {task_type}. Audience: {audience}. Language: {target_lang}. Text/MELC: {base_melc}."
+    
+    if task_type == "Unpack to 5E Lesson Plan":
+        prompt += " Format strictly as a 5E Lesson Plan Markdown table."
+    if needs_rubric:
+        prompt += " Also include a 4-point grading rubric table at the bottom."
+    if needs_quiz:
+        prompt += " Append a 5-item multiple choice quiz based on the lesson, with a clear Answer Key at the very end."
+    if local_context:
+        prompt += f" Heavily contextualize the 'Engage' and 'Explore' phases around this local theme: {local_context}."
+    if cot_indicators:
+        prompt += f" Explicitly design the lesson to hit these COT indicators: {', '.join(cot_indicators)}. Add a brief 'COT Alignment Note' at the end explaining how they were met."
+        
+    return prompt
+
+# --- 7. TABS LOGIC ---
+st.write("---")
 tab1, tab2 = st.tabs(["📄 Single Run", "📦 Bulk Run (Quarterly)"])
 
 with tab1:
-    text_to_bust = st.text_area("Paste a single text or MELC here:", height=250)
+    text_to_bust = st.text_area("Paste a single text or MELC here:", height=100)
     
     if st.button("Process Single ✨", type="primary"):
         if not user_api_key or not text_to_bust:
             st.error("Please provide API Key and text!")
         else:
             try:
-                # Build Prompt
-                prompt = f"Target: {task_type}. Audience: {audience}. Language: {target_lang}. Text/MELC: {text_to_bust}."
-                if task_type == "Unpack to 5E Lesson Plan":
-                    prompt += " Format strictly as a 5E Lesson Plan Markdown table."
-                if needs_rubric:
-                    prompt += " Also include a 4-point grading rubric table at the bottom."
-                
-                with st.spinner("Analyzing (or loading from Cache)..."):
-                    # Calling the cached function!
-                    result_text = fetch_ai_response(prompt, user_api_key)
+                final_prompt = build_advanced_prompt(text_to_bust)
+                with st.spinner("Analyzing with Master Teacher protocols..."):
+                    result_text = fetch_ai_response(final_prompt, user_api_key)
                     
                     st.toast("Done!", icon="✅")
                     st.session_state.history.append({"task": task_type, "result": result_text})
@@ -107,52 +132,38 @@ with tab1:
                     st.write("---")
                     colA, colB = st.columns(2)
                     with colA:
-                        st.download_button("📥 Word (.docx)", convert_to_docx(result_text), "JargonBuster.docx", use_container_width=True)
+                        st.download_button("📥 Word (.docx)", convert_to_docx(result_text), "JargonBuster_Pro.docx", use_container_width=True)
                     with colB:
-                        st.download_button("📄 PDF", convert_to_pdf(result_text), "JargonBuster.pdf", use_container_width=True)
+                        st.download_button("📄 PDF", convert_to_pdf(result_text), "JargonBuster_Pro.pdf", use_container_width=True)
             except Exception as e:
                 st.error(f"Error: {e}")
 
-# FEATURE 3: Bulk Processing
 with tab2:
-    st.info("💡 Paste multiple MELCs (one per line) to generate a massive weekly plan.")
-    bulk_text = st.text_area("Paste multiple MELCs here:", height=250, placeholder="MELC 1\nMELC 2\nMELC 3")
+    st.info("💡 Paste multiple MELCs (one per line). All Master Teacher settings above will be applied to EVERY lesson.")
+    bulk_text = st.text_area("Paste multiple MELCs here:", height=200, placeholder="MELC 1\nMELC 2\nMELC 3")
     
     if st.button("Process Bulk 📦", type="primary"):
         if not user_api_key or not bulk_text:
             st.error("Please provide API Key and text!")
         else:
             melcs_list = [m for m in bulk_text.split('\n') if m.strip() != '']
-            final_bulk_document = "# 📦 Weekly Bulk Lesson Plan\n\n"
-            
-            # Progress bar for visual feedback
+            final_bulk_document = "# 📦 Weekly Bulk Lesson Plan (COT Aligned)\n\n"
             progress_bar = st.progress(0)
             
             try:
                 for i, melc in enumerate(melcs_list):
                     st.write(f"⏳ Processing: *{melc}*...")
+                    final_prompt = build_advanced_prompt(melc)
                     
-                    # Build Prompt for this specific MELC
-                    prompt = f"Target: {task_type}. Audience: {audience}. Language: {target_lang}. Text/MELC: {melc}."
-                    if task_type == "Unpack to 5E Lesson Plan":
-                        prompt += " Format strictly as a 5E Lesson Plan Markdown table."
-                    if needs_rubric:
-                        prompt += " Include a 4-point grading rubric table."
-                        
-                    # Fetch from cache or API
-                    result_text = fetch_ai_response(prompt, user_api_key)
+                    result_text = fetch_ai_response(final_prompt, user_api_key)
                     final_bulk_document += f"## Topic: {melc}\n{result_text}\n\n---\n\n"
-                    
-                    # Update progress bar
                     progress_bar.progress((i + 1) / len(melcs_list))
                     
-                    # Breath to avoid 429 Error on Free Tier
                     if i < len(melcs_list) - 1:
                         time.sleep(3) 
                 
                 st.toast("Bulk Processing Complete!", icon="🎉")
                 st.session_state.history.append({"task": "Bulk Run", "result": final_bulk_document})
-                
                 st.success("All MELCs processed! Ready for export.")
                 st.markdown(final_bulk_document)
                 
