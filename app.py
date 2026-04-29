@@ -166,13 +166,13 @@ with tab2:
                 for i, melc in enumerate(melcs_list):
                     st.write(f"⏳ Processing: *{melc}*...")
                     final_prompt = build_advanced_prompt(melc)
-                    
+                   
                     result_text = fetch_ai_response(final_prompt, user_api_key)
                     final_bulk_document += f"## Topic: {melc}\n{result_text}\n\n---\n\n"
                     progress_bar.progress((i + 1) / len(melcs_list))
                     
                     if i < len(melcs_list) - 1:
-                    time.sleep(15) # Sleeps for 15 seconds to avoid the 5-per-minute limit
+                        time.sleep(15) # Sleeps for 15 seconds to avoid the 5-per-minute limit
                 
                 st.toast("Bulk Processing Complete!", icon="🎉")
                 st.session_state.history.append({"task": "Bulk Run", "result": final_bulk_document})
