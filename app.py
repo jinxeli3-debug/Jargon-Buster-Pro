@@ -43,11 +43,6 @@ with st.sidebar:
     st.caption("🔑 Need a key? [Get your free Gemini API key here](https://aistudio.google.com/app/apikey)")
     
     st.write("---")
-    st.markdown("### 👨‍🏫 Developer")
-    st.write("**Name:** Eleazer A. Meriño")
-    st.write("DepEd Proficient Teacher | Lone Developer")
-    
-    st.write("---")
     st.markdown("### 🗂️ Cache & History")
     if len(st.session_state.history) == 0:
         st.caption("No history yet.")
@@ -55,6 +50,11 @@ with st.sidebar:
         for i, item in enumerate(reversed(st.session_state.history)):
             with st.expander(f"Run {len(st.session_state.history) - i}: {item['task']}"):
                 st.write(item['result'][:150] + "...")
+    
+    st.write("---")
+    st.markdown("### 👨‍🏫 Developer")
+    st.write("**Name:** Eleazer A. Meriño")
+    st.write("DepEd Proficient Teacher | Lone Developer")
                 
     st.write("---")
     st.markdown(
