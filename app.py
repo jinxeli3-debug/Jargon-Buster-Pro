@@ -4,7 +4,7 @@ from docx import Document
 from fpdf import FPDF
 import io
 import time
-import pandas as pd # Needed for the Admin Dashboard charts
+import pandas as pd
 
 # --- 1. CORE FUNCTIONS & CACHING ---
 def convert_to_docx(text):
@@ -26,7 +26,7 @@ def convert_to_pdf(text):
 @st.cache_data(show_spinner=False)
 def fetch_ai_response(prompt_text, _api_key):
     genai.configure(api_key=_api_key)
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    model = genai.GenerativeModel('gemini-1.5-flash')
     response = model.generate_content(prompt_text)
     return response.text
 
@@ -62,8 +62,8 @@ with st.sidebar:
         """
         <div style='text-align: center; color: gray; font-size: 12px;'>
             <strong>© 2026 Jargon Buster Pro SaaS</strong><br>
-            Developed by Eleazer A. Meriño<br>
-            All rights reserved.
+            Developed by [Your Name]<br>
+            DepEd Pangasinan | All rights reserved.
         </div>
         """, 
         unsafe_allow_html=True
@@ -78,8 +78,8 @@ if user_role == "Principal (Admin Dashboard)":
     
     c1, c2, c3 = st.columns(3)
     c1.metric("Total Lessons Generated", len(st.session_state.history))
-    c2.metric("Active Teachers", "1") # Hardcoded for now
-    c3.metric("Most Used Context", "Binalonan Farming") # Hardcoded for now
+    c2.metric("Active Teachers", "1") 
+    c3.metric("Most Used Context", "Binalonan Farming") 
     
     st.write("---")
     st.subheader("🎯 COT Indicator Targeting (School-wide)")
@@ -119,6 +119,7 @@ else:
 
     text_to_bust = st.text_area("Paste a single text or MELC here:", height=100)
     
+    # --- UPDATED BUTTON LOGIC WITH ERROR HANDLING ---
     if st.button("Generate Initial Lesson ✨", type="primary"):
         if not user_api_key or not text_to_bust:
             st.error("Please provide API Key and text!")
@@ -129,17 +130,24 @@ else:
             if local_context: prompt += f" Contextualize around: {local_context}."
             if cot_indicators: 
                 prompt += f" Explicitly hit these COT indicators: {', '.join(cot_indicators)}."
-                # Update Admin Database secretly!
+                # Update Admin Database secretly
                 for ind in cot_indicators:
                     st.session_state.cot_usage_stats[ind] += 1
 
             with st.spinner("Drafting Master Teacher Lesson..."):
-                result_text = fetch_ai_response(prompt, user_api_key)
-                st.session_state.current_lesson = result_text
-                st.session_state.history.append({"task": task_type, "result": result_text})
-                # Reset chat when a new lesson is generated
-                st.session_state.chat_messages = [] 
-                st.rerun()
+                try:
+                    result_text = fetch_ai_response(prompt, user_api_key)
+                    st.session_state.current_lesson = result_text
+                    st.session_state.history.append({"task": task_type, "result": result_text})
+                    # Reset chat when a new lesson is generated
+                    st.session_state.chat_messages = [] 
+                    st.rerun()
+                except Exception as e:
+                    # Catch the quota error gracefully
+                    if "ResourceExhausted" in str(e) or "429" in str(e):
+                        st.warning("⏳ The AI is cooling down! You hit the free-tier speed limit. Please wait about 60 seconds and try again.")
+                    else:
+                        st.error(f"An unexpected error occurred: {e}")
 
     # --- THE CO-PILOT EDITOR & EXPORT MODULE ---
     if st.session_state.current_lesson:
@@ -181,11 +189,17 @@ else:
             # Tell AI to edit the document
             with st.chat_message("assistant"):
                 with st.spinner("Editing document..."):
-                    edit_prompt = f"Here is a lesson plan:\n\n{st.session_state.current_lesson}\n\nUser request: {edit_command}\n\nRewrite the lesson plan incorporating this request."
-                    new_doc = fetch_ai_response(edit_prompt, user_api_key)
-                    st.session_state.current_lesson = new_doc
-                    
-                    st.markdown("Done! The document above has been updated.")
-                    st.session_state.chat_messages.append({"role": "assistant", "content": "Done! The document above has been updated."})
-                    time.sleep(1)
-                    st.rerun() # Refresh the page to show the new document
+                    try:
+                        edit_prompt = f"Here is a lesson plan:\n\n{st.session_state.current_lesson}\n\nUser request: {edit_command}\n\nRewrite the lesson plan incorporating this request."
+                        new_doc = fetch_ai_response(edit_prompt, user_api_key)
+                        st.session_state.current_lesson = new_doc
+                        
+                        st.markdown("Done! The document above has been updated.")
+                        st.session_state.chat_messages.append({"role": "assistant", "content": "Done! The document above has been updated."})
+                        time.sleep(1)
+                        st.rerun() 
+                    except Exception as e:
+                        if "ResourceExhausted" in str(e) or "429" in str(e):
+                            st.warning("⏳ The AI is cooling down! You hit the free-tier speed limit. Please wait about 60 seconds and try again.")
+                        else:
+                            st.error(f"An unexpected error occurred: {e}")
