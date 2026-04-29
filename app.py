@@ -25,7 +25,7 @@ def convert_to_pdf(text):
 @st.cache_data(show_spinner=False)
 def fetch_ai_response(prompt_text, _api_key):
     genai.configure(api_key=_api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     response = model.generate_content(prompt_text)
     return response.text
 
