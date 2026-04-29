@@ -44,8 +44,8 @@ with st.sidebar:
     
     st.write("---")
     st.markdown("### 👨‍🏫 Developer")
-    st.write("**Name:** [Your Name]")
-    st.write("DepEd Proficient Teacher | Binalonan")
+    st.write("**Name:** Eleazer A. Meriño")
+    st.write("DepEd Proficient Teacher | Lone Developer")
     
     st.write("---")
     st.markdown("### 🗂️ Cache & History")
@@ -61,8 +61,7 @@ with st.sidebar:
         """
         <div style='text-align: center; color: gray; font-size: 12px;'>
             <strong>© 2026 Jargon Buster Pro</strong><br>
-            Developed by [Your Name]<br>
-            DepEd Pangasinan | All rights reserved.
+             All rights reserved.
         </div>
         """, 
         unsafe_allow_html=True
