@@ -25,7 +25,6 @@ def convert_to_pdf(text):
 @st.cache_data(show_spinner=False)
 def fetch_ai_response(prompt_text, _api_key):
     genai.configure(api_key=_api_key)
-    # Note: Upgrading to 1.5-flash to handle the more complex COT prompts efficiently
     model = genai.GenerativeModel('gemini-1.5-flash')
     response = model.generate_content(prompt_text)
     return response.text
@@ -41,6 +40,8 @@ with st.sidebar:
     st.title("Settings ⚙️")
     user_api_key = st.text_input("Enter Gemini API Key", type="password")
     
+    st.caption("🔑 Need a key? [Get your free Gemini API key here](https://aistudio.google.com/app/apikey)")
+    
     st.write("---")
     st.markdown("### 👨‍🏫 Developer")
     st.write("**Name:** [Your Name]")
@@ -54,6 +55,18 @@ with st.sidebar:
         for i, item in enumerate(reversed(st.session_state.history)):
             with st.expander(f"Run {len(st.session_state.history) - i}: {item['task']}"):
                 st.write(item['result'][:150] + "...")
+                
+    st.write("---")
+    st.markdown(
+        """
+        <div style='text-align: center; color: gray; font-size: 12px;'>
+            <strong>© 2026 Jargon Buster Pro</strong><br>
+            Developed by [Your Name]<br>
+            DepEd Pangasinan | All rights reserved.
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
 
 # --- 4. MAIN UI & BASIC SETTINGS ---
 st.title("Jargon Buster Pro 🚀")
