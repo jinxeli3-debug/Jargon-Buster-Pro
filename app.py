@@ -26,7 +26,7 @@ def convert_to_pdf(text):
 @st.cache_data(show_spinner=False)
 def fetch_ai_response(prompt_text, _api_key):
     genai.configure(api_key=_api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     response = model.generate_content(prompt_text)
     return response.text
 
@@ -62,8 +62,8 @@ with st.sidebar:
         """
         <div style='text-align: center; color: gray; font-size: 12px;'>
             <strong>© 2026 Jargon Buster Pro SaaS</strong><br>
-            Developed by [Your Name]<br>
-            DepEd Pangasinan | All rights reserved.
+            Developed by Eleazer A. Meriño<br>
+            All rights reserved.
         </div>
         """, 
         unsafe_allow_html=True
@@ -117,7 +117,7 @@ else:
     with col_mt2:
         cot_indicators = st.multiselect("🎯 Select COT Indicators to Target", list(st.session_state.cot_usage_stats.keys()))
 
-    text_to_bust = st.text_area("Paste a single text or MELC here:", height=100)
+    text_to_bust = st.text_area("Paste a single text or MELC here:", height=150)
     
     # --- UPDATED BUTTON LOGIC WITH ERROR HANDLING ---
     if st.button("Generate Initial Lesson ✨", type="primary"):
