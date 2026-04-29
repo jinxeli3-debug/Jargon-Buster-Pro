@@ -124,7 +124,7 @@ st.write("---")
 tab1, tab2 = st.tabs(["📄 Single Run", "📦 Bulk Run (Quarterly)"])
 
 with tab1:
-    text_to_bust = st.text_area("Paste a single text or MELC here:", height=100)
+    text_to_bust = st.text_area("Paste a single text or MELC here:", height=150)
     
     if st.button("Process Single ✨", type="primary"):
         if not user_api_key or not text_to_bust:
@@ -172,7 +172,7 @@ with tab2:
                     progress_bar.progress((i + 1) / len(melcs_list))
                     
                     if i < len(melcs_list) - 1:
-                        time.sleep(3) 
+                    time.sleep(15) # Sleeps for 15 seconds to avoid the 5-per-minute limit
                 
                 st.toast("Bulk Processing Complete!", icon="🎉")
                 st.session_state.history.append({"task": "Bulk Run", "result": final_bulk_document})
